@@ -6,6 +6,10 @@ local Targeting    = require("utils.targeting")
 local Casting      = require("utils.casting")
 local Logger       = require("utils.logger")
 
+local shouldChainStun = function()
+    return Config:GetSetting('DoChainStun') and Targeting.GetXTHaterCount() >= Config:GetSetting('ChainStunMinHaters')
+end
+
 local _ClassConfig = {
     _version            = "1.2 - Project Lazarus",
     _author             = "Derple, Grimmier, Algar, Robban",
@@ -844,8 +848,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function()
-                if not Config:GetSetting('DoSlow') then return false end
-                return not Config:GetSetting('DoChainStun') or Targeting.GetXTHaterCount() < Config:GetSetting('ChainStunMinHaters')                
+                return Config:GetSetting('DoSlow') and not shouldChainStun()             
             end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
@@ -858,7 +861,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function ()
-                return not Config:GetSetting('DoChainStun') or Targeting.GetXTHaterCount() < Config:GetSetting('ChainStunMinHaters')
+                return not shouldChainStun()
             end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
@@ -879,8 +882,7 @@ local _ClassConfig = {
             state = 1,
             steps = 1,
             load_cond = function()
-                if not Core.IsModeActive("Default") then return false end
-                return not Config:GetSetting('DoChainStun') or Targeting.GetXTHaterCount() < Config:GetSetting('ChainStunMinHaters')
+                return Core.IsModeActive('Default') and not shouldChainStun()
             end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
@@ -1277,30 +1279,22 @@ local _ClassConfig = {
             {
                 name = "PBAEStunSpell3",
                 type = "Spell",
-                cond = function(self)
-                    return Config:GetSetting('DoChainStun') and Targeting.GetXTHaterCount() >= Config:GetSetting('ChainStunMinHaters')
-                end,
+                cond = function(self) return shouldChainStun() end,
             },
             {
                 name = "PBAEStunSpell2",
                 type = "Spell",
-                cond = function(self)
-                    return Config:GetSetting('DoChainStun') and Targeting.GetXTHaterCount() >= Config:GetSetting('ChainStunMinHaters')
-                end,
+                cond = function(self) return shouldChainStun() end,
             },
             {
                 name = "PBAEStunSpell1",
                 type = "Spell",
-                cond = function(self)
-                    return Config:GetSetting('DoChainStun') and Targeting.GetXTHaterCount() >= Config:GetSetting('ChainStunMinHaters')
-                end,
+                cond = function(self) return shouldChainStun() end,
             },
             {
                 name = "PBAEStunSpell0",
                 type = "Spell",
-                cond = function(self)
-                    return Config:GetSetting('DoChainStun') and Targeting.GetXTHaterCount() >= Config:GetSetting('ChainStunMinHaters')
-                end,
+                cond = function(self) return shouldChainStun() end,
             },
             {
                 name = "UseAzureMindCrystal",
@@ -1619,21 +1613,21 @@ local _ClassConfig = {
         {
             gem = 6,
             spells = {
-                { name = "PBAEStunSpell0", cond = function(self) return Config::GetSetting('DoChainStun') end, },
+                { name = "PBAEStunSpell0", cond = function(self) return Config:GetSetting('DoChainStun') or false end, },
                 { name = "NukeSpell1", },
             },
         },
         {
             gem = 7,
             spells = {
-                { name = "PBAEStunSpell1", cond = function(self) return Config::GetSetting('DoChainStun') end, },
+                { name = "PBAEStunSpell1", cond = function(self) return Config:GetSetting('DoChainStun') or false end, },
                 { name = "DoTSpell1", },
             },
         },
         {
             gem = 8,
             spells = {
-                { name = "PBAEStunSpell2", cond = function(self) return Config::GetSetting('DoChainStun') end, },
+                { name = "PBAEStunSpell2", cond = function(self) return Config:GetSetting('DoChainStun') end, },
                 { name = "ManaNuke",       cond = function(self) return Core.IsModeActive("ModernEra") end, },
                 { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
                 { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
@@ -1644,7 +1638,7 @@ local _ClassConfig = {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "PBAEStunSpell3", cond = function(self) return Config::GetSetting('DoChainStun') end, },
+                { name = "PBAEStunSpell3", cond = function(self) return Config:GetSetting('DoChainStun') end, },
                 { name = "NdtBuff", cond = function(self) return Core.IsModeActive("ModernEra") end, },
                 { name = "ManaDot", cond = function(self) return true end, },
             },
