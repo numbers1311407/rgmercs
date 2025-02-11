@@ -357,6 +357,14 @@ local _ClassConfig = {
                 end,
             },
             {
+                name = "Feign Death",
+                type = "Ability",
+                cond = function(self, abilityName)
+                    if not Config:GetSetting('AggroFeign') then return false end
+                    return Targeting.IHaveAggro(95) and mq.TLO.Me.AbilityReady(abilityName)() and not Core.IAmMA
+                end,
+            },
+            {
                 name = "Defy Death",
                 type = "Disc",
                 cond = function(self, discSpell)
@@ -804,7 +812,7 @@ local _ClassConfig = {
             Category = "Abilities",
             Index = 8,
             Tooltip = "Click your chest item during burns.",
-            Default = true,
+            Default = mq.TLO.MacroQuest.BuildName() ~= "Emu",
             ConfigType = "Advanced",
             FAQ = "What is a Chest Click?",
             Answer = "Most Chest slot items after level 75ish have a clickable effect.\n" ..
