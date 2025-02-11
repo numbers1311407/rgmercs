@@ -269,7 +269,7 @@ local _ClassConfig = {
             "Skin of the Reptile",
             "Bulwark of the Reptile",
         },
-        ['NaturesWrathDOT'] = {
+        ['NaturesWrathDot'] = {
             -- Natures Wrath DOT Line >= 75LVL -- On Bar
             "Nature's Fervid Wrath",
             "Nature's Blistering Wrath",
@@ -282,7 +282,7 @@ local _ClassConfig = {
             "Nature's Blazing Wrath",
             "Nature's Sweltering Wrath",
         },
-        ['HordeDOT'] = {
+        ['HordeDot'] = {
             -- Horde Dots >= 10LVL -- On Bar
             "Horde of Duskwigs",
             "Horde of Hyperboreads",
@@ -302,7 +302,7 @@ local _ClassConfig = {
             "Creeping Crud",
             "Stinging Swarm",
         },
-        ['SunDOT'] = {
+        ['SunDot'] = {
             -- SUN Dot Line >= 49LVL -- On Bar
             "Sunpyre",
             "Sunshock",
@@ -343,7 +343,7 @@ local _ClassConfig = {
             "Immolate",
             "Flame Lick",
         },
-        ['SunrayDOT'] = {
+        ['SunrayDot'] = {
             -- Sunray Line >= 1 LVL
             "Tenebrous Sunray",
             "Erupting Sunray",
@@ -362,7 +362,7 @@ local _ClassConfig = {
             "Immolate",
             "Flame Lick",
         },
-        ['MoonBeamDOT'] = {
+        ['MoonBeamDot'] = {
             -- MoonBeam Dot
             "Gelid Moonbeam",
             "Algid Moonbeam",
@@ -448,7 +448,7 @@ local _ClassConfig = {
             "Burst of Fire",
             "Burst of Flame",
         },
-        ['ChillDOT'] = {
+        ['ChillDot'] = {
             -- Chill DOT Line -- >= 95LVL -- Used for Burns
             "Chill of the Dusksage Tender",
             "Chill of the Arbor Tender",
@@ -471,7 +471,7 @@ local _ClassConfig = {
             "Ensnaring Roots",
             "Grasping Roots",
         },
-        ['SnareSpells'] = {
+        ['SnareSpell'] = {
             -- Snare Spells
             "Thornmaw Vines",
             "Hungry Vines",
@@ -861,8 +861,18 @@ local _ClassConfig = {
             state = 1,
             steps = 2,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            cond = function(self, combat_state, targetId)
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
+            end,
+        },
+        { --Keep things from running
+            name = 'Snare',
+            state = 1,
+            steps = 1,
+            load_cond = function() return Config:GetSetting('DoSnare') end,
+            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
+                return combat_state == "Combat" and Core.OkayToNotHeal() and Targeting.GetXTHaterCount() <= Config:GetSetting('SnareCount')
             end,
         },
         {
@@ -886,9 +896,20 @@ local _ClassConfig = {
             end,
         },
         {
-            name = 'HealDPS',
+            name = 'HealDPS(71+)',
             state = 1,
             steps = 1,
+            load_cond = function() return mq.TLO.Me.Level() > 70 end,
+            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
+            end,
+        },
+        {
+            name = 'HealDPS(1-70)',
+            state = 1,
+            steps = 1,
+            load_cond = function() return mq.TLO.Me.Level() < 71 end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning() and Core.OkayToNotHeal()
@@ -896,23 +917,23 @@ local _ClassConfig = {
         },
     },
     ['Rotations']         = {
-        ['HealDPS'] = {
+        ['HealDPS(71+)'] = {
             {
-                name = "NaturesWrathDOT",
+                name = "NaturesWrathDot",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
                 end,
             },
             {
-                name = "SunDOT",
+                name = "SunDot",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
                 end,
             },
             {
-                name = "HordeDOT",
+                name = "HordeDot",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return Casting.DotSpellCheck(spell) and (Casting.DetGOMCheck() or Targeting.IsNamed(mq.TLO.Target)) and Casting.TargetedSpellReady(spell, target.ID())
@@ -931,6 +952,36 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     return Casting.TargetedSpellReady(spell, target.ID()) and (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= Config:GetSetting('LightHealPoint')
+                end,
+            },
+            {
+                name = "Nature's Frost",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                end,
+            },
+            {
+                name = "Nature's Fire",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                end,
+            },
+            {
+                name = "Nature's Bolt",
+                type = "AA",
+                cond = function(self, aaName, target)
+                    return Casting.TargetedAAReady(aaName, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                end,
+            },
+        },
+        ['HealDPS(1-70)'] = {
+            {
+                name = "WinterFireDD",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.TargetedSpellReady(spell, target.ID()) and (Casting.HaveManaToNuke() or Casting.BurnCheck())
                 end,
             },
             {
@@ -1070,6 +1121,22 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     return Casting.TargetedAAReady(aaName, target.ID()) and Casting.DetSpellCheck(mq.TLO.Me.AltAbility(aaName).Spell)
+                end,
+            },
+            {
+                name = "RoDebuff",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.TargetedSpellReady(spell, target.ID()) and Casting.DetSpellCheck(spell)
+                end,
+            },
+        },
+        ['Snare'] = {
+            {
+                name = "SnareSpell",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.TargetedSpellReady(spell, target.ID()) and Casting.DetSpellCheck(spell) and Targeting.GetTargetPctHPs(target) < 50
                 end,
             },
         },
@@ -1260,6 +1327,7 @@ local _ClassConfig = {
             spells = {
 
                 { name = "LongGroupHeal", cond = function(self) return mq.TLO.Me.Level() >= 70 end, },
+                { name = "WinterFireDD", },
 
             },
         },
@@ -1271,6 +1339,12 @@ local _ClassConfig = {
                     name = "RemoteSunDD",
                     cond = function(self)
                         return mq.TLO.Me.Level() >= 83 --and Config:GetSetting('DoFire')
+                    end,
+                },
+                {
+                    name = "SnareSpell",
+                    cond = function(self)
+                        return Config:GetSetting('DoSnare')
                     end,
                 },
                 -- {
@@ -1287,7 +1361,7 @@ local _ClassConfig = {
             spells = {
 
                 --{ name = "FrostDebuff", cond = function(self) return mq.TLO.Me.Level() >= 74 and not Config:GetSetting('DoFire') end, },
-                { name = "HordeDOT", cond = function(self) return Casting.CanUseAA("Blessing of Ro") end, },
+                { name = "HordeDot", cond = function(self) return Casting.CanUseAA("Blessing of Ro") end, },
                 { name = "RoDebuff", cond = function(self) return true end, },
 
             },
@@ -1307,14 +1381,14 @@ local _ClassConfig = {
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
 
-                { name = "SunDOT", cond = function(self) return true end, }, --Config:GetSetting("DoFire") end, },
+                { name = "SunDot", cond = function(self) return true end, }, --Config:GetSetting("DoFire") end, },
             },
         },
         {
             gem = 10,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "NaturesWrathDOT", cond = function(self) return true end, },
+                { name = "NaturesWrathDot", cond = function(self) return true end, },
 
             },
         },
@@ -1438,21 +1512,11 @@ local _ClassConfig = {
             Answer = "To avoid deletion of settings when moving between configs, our beta or experimental configs keep placeholders for live settings\n" ..
                 "These tabs or settings will be removed if and when the config is made the default.",
         },
-        ['DoSnare']      = {
-            DisplayName = "Orphaned",
-            Type = "Custom",
-            Category = "Orphaned",
-            Tooltip = "Orphaned setting from live, no longer used in this config.",
-            Default = false,
-            FAQ = "Why do I see orphaned settings?",
-            Answer = "To avoid deletion of settings when moving between configs, our beta or experimental configs keep placeholders for live settings\n" ..
-                "These tabs or settings will be removed if and when the config is made the default.",
-        },
         ['DoChestClick'] = {
             DisplayName = "Do Chest Click",
             Category = "Utilities",
             Tooltip = "Click your chest item",
-            Default = true,
+            Default = mq.TLO.MacroQuest.BuildName() ~= "Emu",
             FAQ = "Why am I not clicking my chest item?",
             Answer = "Make sure [DoChestClick] is enabled. If you are in Heal Mode, you may not be clicking your chest item.",
         },
@@ -1509,6 +1573,28 @@ local _ClassConfig = {
             FAQ = "Why do I see orphaned settings?",
             Answer = "To avoid deletion of settings when moving between configs, our beta or experimental configs keep placeholders for live settings\n" ..
                 "These tabs or settings will be removed if and when the config is made the default.",
+        },
+        ['DoSnare']      = {
+            DisplayName = "Use Snares",
+            Category = "Buffs/Debuffs",
+            Index = 1,
+            Tooltip = "Use Snare(Snare Dot used until AA is available).",
+            Default = false,
+            RequiresLoadoutChange = true,
+            FAQ = "Why is my Shadow Knight not snaring?",
+            Answer = "Make sure Use Snares is enabled in your class settings.",
+        },
+        ['SnareCount']   = {
+            DisplayName = "Snare Max Mob Count",
+            Category = "Buffs/Debuffs",
+            Index = 2,
+            Tooltip = "Only use snare if there are [x] or fewer mobs on aggro. Helpful for AoE groups.",
+            Default = 3,
+            Min = 1,
+            Max = 99,
+            FAQ = "Why is my Shadow Knight Not snaring?",
+            Answer = "Make sure you have [DoSnare] enabled in your class settings.\n" ..
+                "Double check the Snare Max Mob Count setting, it will prevent snare from being used if there are more than [x] mobs on aggro.",
         },
     },
 }
