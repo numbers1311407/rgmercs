@@ -1800,7 +1800,7 @@ _ClassConfig      = {
                 end,
             },
             {
-                name = "Elemental Form",
+                name = "Elemental Form: Water",
                 type = "AA",
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName) and Casting.AAReady(aaName)
