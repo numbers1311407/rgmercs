@@ -1740,6 +1740,13 @@ _ClassConfig      = {
         },
         ['Downtime'] = {
             {
+                name = "Elemental Form: Water",
+                type = "AA",
+                cond = function(self, aaName)
+                    return Casting.SelfBuffAACheck(aaName) and Casting.AAReady(aaName)
+                end,
+            },
+            {
                 name = "Elemental Conversion",
                 type = "AA",
                 cond = function(self, aaName)
