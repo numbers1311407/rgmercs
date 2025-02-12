@@ -479,7 +479,7 @@ function Module:IsRezing()
         return self:IsHealing()
     end
 
-    return self.ClassConfig.ModeChecks.IsRezing()
+    return Config:GetSetting('DoRez') and self.ClassConfig.ModeChecks.IsRezing()
 end
 
 ---@return boolean
