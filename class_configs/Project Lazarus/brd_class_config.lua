@@ -866,7 +866,7 @@ local _ClassConfig = {
             load_cond = function() return Config:GetSetting("DoSTSlow") or Config:GetSetting("DoAESlow") or Config:GetSetting("DoDispel") end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning()
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck()
             end,
         },
         {
@@ -1999,8 +1999,7 @@ local _ClassConfig = {
             Min = 1,
             Max = 4,
             RequiresLoadoutChange = true,
-            ConfigType = "Advanced",
-            FAQ = "Why am I not using [x] run speed buff?",
+            FAQ = "Why am I not using [x] run speed (Selo) buff?",
             Answer = "You can configure your run speed buff selection in the Utility tab, this may need to be adjusted as you level.",
         },
         ['UseEndBreath']        = {

@@ -956,7 +956,7 @@ local _ClassConfig = {
             steps = 1,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning()
+                return combat_state == "Combat" and not Casting.IAmFeigning() and Casting.DebuffConCheck()
             end,
         },
         {
@@ -1420,6 +1420,15 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.AuraActiveByName(spell.BaseName()) end,
                 cond = function(self, spell) return (spell and spell() and not Casting.AuraActiveByName(spell.BaseName())) end,
+            },
+            {
+                name = "HealingAura",
+                type = "Spell",
+                active_cond = function(self, spell) return Casting.AuraActiveByName(spell.BaseName()) end,
+                cond = function(self, spell)
+                    if self:GetResolvedActionMapItem('IceAura') then return false end
+                    return (spell and spell() and not Casting.AuraActiveByName(spell.BaseName()))
+                end,
             },
             {
                 name = "ManaBear",

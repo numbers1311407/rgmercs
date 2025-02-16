@@ -216,7 +216,7 @@ function Module:Init()
 
     self.ModuleLoaded = true
 
-    if Casting.CanUseAA("Companion's Discipline") then
+    if Casting.CanUseAA("Companion's Discipline") or (Core.OnLaz() and Casting.CanUseAA("Pet Discipline")) then
         Core.DoCmd("/pet ghold on")
     else
         Core.DoCmd("/pet hold on")
@@ -315,7 +315,7 @@ function Module:Render()
 
         if ImGui.CollapsingHeader("Spell Loadout") then
             ImGui.Indent()
-            if ImGui.SmallButton("Rescan Loadout") then
+            if ImGui.SmallButton("Reload Spells") then
                 self:RescanLoadout()
                 Logger.log_info("\awManual loadout scan initiated.")
             end
