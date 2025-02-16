@@ -165,6 +165,10 @@ return {
             "Lazam's Chill",     -- Level 124
 
         },
+        ['FrogSwarmDot'] = {
+            "Amphibious Toxin",
+            "Reptilian Venom",
+        },
         ['SlowSpell'] = {
             -- Slow Spell
             "Drowsy",          -- Level 20
@@ -1019,6 +1023,14 @@ return {
                 end,
             },
             {
+                name = "FrogSwarmDot",
+                type = "Spell",
+                cond = function (self, spell, target)
+                    if not Config:GetSetting('DoDot') then return false end
+                    return Casting.DotSpellCheck(spell) and (Casting.DotHaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
+                end,
+            },
+            {
                 name = "BloodDot",
                 type = "Spell",
                 cond = function(self, spell, target)
@@ -1510,6 +1522,7 @@ return {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
+                { name = "FrogSwarmDot", },
                 { name = "PoiBite", },
             },
         },

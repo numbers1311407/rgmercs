@@ -8,6 +8,13 @@ local ItemManager = require("utils.item_manager")
 local DanNet      = require('lib.dannet.helpers')
 local Logger      = require("utils.logger")
 
+shouldAEGrind = function()
+    return Core.IsModeActive("Fire")
+        and Config:GetSetting('DoAEGrind')
+        and (Casting.HaveManaToNuke() or Casting.BurnCheck())
+        and Targeting.GetXTHaterCount() >= Config:GetSetting('AEGrindMinHaters')
+end
+
 _ClassConfig      = {
     _version              = "1.0 - Project Lazarus",
     _author               = "Derple, Morisato",
@@ -859,6 +866,15 @@ _ClassConfig      = {
             "Malaisement",
             "Malaise",
         },
+        ['AE0'] = {
+            "Wind of the Desert",
+        },
+        ['AE1'] = {
+            "Scintillation",
+        },
+        ['AE2'] = {
+            "Sun Storm",  
+        },
     },
     ['HealRotationOrder'] = {
 
@@ -920,7 +936,7 @@ _ClassConfig      = {
             load_cond = function() return Config:GetSetting('DoMalo') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state, targetId)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
+                return combat_state == "Combat" and not Casting.IAmFeigning() and not shouldAEGrind() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
             end,
         },
         {
@@ -1015,12 +1031,14 @@ _ClassConfig      = {
             end
         end,
         handle_pet_toys = function(self)
-            if mq.TLO.Me.FreeInventory() < 2 or mq.TLO.Me.Level() < 73 then
-                Logger.log_debug("handle_pet_toys() ==> \arFailed your level is below 73 or you dont have inv slots open!")
+            if mq.TLO.Me.FreeInventory() < 2 then
+                Logger.log_error("handle_pet_toys() ==> \arFailed you dont have inv slots open!")
+                --Logger.log_verbose("handle_pet_toys() ==> \arFailed your pet already has weapons!")
                 return false
             end
             if (mq.TLO.Me.Pet.Equipment("Primary")() or 0) ~= 0 then
-                Logger.log_verbose("handle_pet_toys() ==> \arFailed your pet already has weapons!")
+                Logger.log_error("handle_pet_toys() ==> \arFailed your pet already has weapons!")
+                --Logger.log_verbose("handle_pet_toys() ==> \arFailed your pet already has weapons!")
                 return false
             end
 
@@ -1049,18 +1067,18 @@ _ClassConfig      = {
             local petToyResolvedSpell = self.ResolvedActionMap[string.format("Pet%sSummon", type)]
 
             if not petToyResolvedSpell or not petToyResolvedSpell() then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed to resolve Pet%sSummon item type!", type)
+                Logger.log_error("summon_pet_toy() ==> \arFailed to resolve Pet%sSummon item type!", type)
                 return false
             end
 
             if mq.TLO.Me.Level() < petToyResolvedSpell.Level() then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed your level is below the pet toy spell(%s) level: %d!", petToyResolvedSpell.RankName(),
+                Logger.log_error("summon_pet_toy() ==> \arFailed your level is below the pet toy spell(%s) level: %d!", petToyResolvedSpell.RankName(),
                     petToyResolvedSpell.Level())
                 return false
             end
 
             if not Casting.SpellReady(petToyResolvedSpell) then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed SpellReady() Check!", type)
+                Logger.log_error("summon_pet_toy() ==> \arFailed SpellReady() Check!", type)
                 return false
             end
 
@@ -1074,7 +1092,7 @@ _ClassConfig      = {
             end
 
             if openSlot == 0 then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed to find open top level inv slot!", openSlot)
+                Logger.log_error("summon_pet_toy() ==> \arFailed to find open top level inv slot!", openSlot)
                 return
             end
 
@@ -1612,6 +1630,21 @@ _ClassConfig      = {
                 end,
             },
             {
+                name = "AE0",
+                type = "Spell",
+                cond = function(self) return shouldAEGrind() end,
+            },
+            {
+                name = "AE1",
+                type = "Spell",
+                cond = function(self) return shouldAEGrind() end,
+            },
+            {
+                name = "AE2",
+                type = "Spell",
+                cond = function(self) return shouldAEGrind() end,
+            },
+            {
                 name = "VolleyNuke",
                 type = "Spell",
                 cond = function(self, spell)
@@ -1930,6 +1963,7 @@ _ClassConfig      = {
             gem = 7,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
+                { name = 'AE0', cond = function() return Config:GetSetting('DoAEGrind') end, },
                 {
                     name = "AllianceBuff",
                     cond = function(self)
@@ -1950,6 +1984,7 @@ _ClassConfig      = {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
+                { name = "AE1", cond = function() return Config:GetSetting('DoAEGrind') end, },         
                 { name = "DichoSpell", },
             },
         },
@@ -2074,7 +2109,7 @@ _ClassConfig      = {
         },
         ['DoForce']        = {
             DisplayName = "Do Force",
-            Category = "Spells and Abilties",
+            Category = "Spells and Abilities",
             Tooltip = "Use Force of Elements AA",
             Default = true,
             FAQ = "I want to use Force of Elements AA in my rotation, how do I do that?",
@@ -2082,7 +2117,7 @@ _ClassConfig      = {
         },
         ['DoMagicNuke']    = {
             DisplayName = "Do Magic Nuke",
-            Category = "Spells and Abilties",
+            Category = "Spells and Abilities",
             Tooltip = "Use Magic nukes instead of Fire",
             Default = false,
             FAQ = "I want to use Magic Nukes instead of Fire Nukes, how do I do that?",
@@ -2192,6 +2227,20 @@ _ClassConfig      = {
             FAQ = "What is an Arcanum and why would I want to weave them?",
             Answer =
             "The Focus of Arcanum series of AA decreases your spell resist rates.\nIf you have purchased all four, you can likely easily weave them to keep 100% uptime on one.",
+        },
+        ['DoAEGrind'] = {
+            DisplayName = "AoE Grinding",
+            Category = "Spells and Abilities",
+            Tooltip = "Will spam AoE spells regardless of mode when mob density meets criteria",
+            Default = false,
+        },
+        ['AEGrindMinHaters'] = {
+            DisplayName = "Min AE grind haters",
+            Category = "Spells and Abilities",
+            Tooltip = "If there are less than x mobs on XT you will not use AE grind spells",
+            Default = 4,
+            Min = 1,
+            Max = 100,     
         },
     },
 }

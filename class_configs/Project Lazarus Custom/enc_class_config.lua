@@ -6,6 +6,10 @@ local Targeting    = require("utils.targeting")
 local Casting      = require("utils.casting")
 local Logger       = require("utils.logger")
 
+local shouldChainStun = function()
+    return Config:GetSetting('DoAEGrind') and Targeting.GetXTHaterCount() >= Config:GetSetting('AEGrindMinHaters')
+end
+
 local _ClassConfig = {
     _version            = "1.2 - Project Lazarus",
     _author             = "Derple, Grimmier, Algar, Robban",
@@ -752,6 +756,18 @@ local _ClassConfig = {
         ['HasteManaCombo'] = {
             "Unified Alacrity",
         },
+        ['PBAEStunSpell0'] = {
+            "Color Cloud",
+        },
+        ['PBAEStunSpell1'] = {
+            "Color Skew",
+        },
+        ['PBAEStunSpell2'] = {
+            "Color Shift",
+        },
+        ['PBAEStunSpell3'] = {
+            "Color Flux",
+        },
     },
     ['RotationOrder']   = {
         {
@@ -1225,6 +1241,26 @@ local _ClassConfig = {
 
             },
             {
+                name = "PBAEStunSpell3",
+                type = "Spell",
+                cond = function(self) return shouldChainStun() end,
+            },
+            {
+                name = "PBAEStunSpell2",
+                type = "Spell",
+                cond = function(self) return shouldChainStun() end,
+            },
+            {
+                name = "PBAEStunSpell1",
+                type = "Spell",
+                cond = function(self) return shouldChainStun() end,
+            },
+            {
+                name = "PBAEStunSpell0",
+                type = "Spell",
+                cond = function(self) return shouldChainStun() end,
+            },
+            {
                 name = "UseAzureMindCrystal",
                 type = "CustomFunc",
                 cond = function(self)
@@ -1407,6 +1443,7 @@ local _ClassConfig = {
                 name = "CrippleSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
+                    if Config:GetSetting('DoAEGrind') then return false end
                     if not Config:GetSetting('DoCripple') then return false end
                     return Targeting.IsNamed(mq.TLO.Target) and Casting.DetSpellCheck(spell) and Casting.TargetedSpellReady(spell, target.ID())
                 end,
@@ -1534,18 +1571,21 @@ local _ClassConfig = {
         {
             gem = 6,
             spells = {
+                { name = "PBAEStunSpell0", cond = function(self) return Config:GetSetting('DoAEGrind') end, },
                 { name = "NukeSpell", },
             },
         },
         {
             gem = 7,
             spells = {
+                { name = "PBAEStunSpell1", cond = function(self) return Config:GetSetting('DoAEGrind') end, },
                 { name = "DotSpell1", },
             },
         },
         {
             gem = 8,
             spells = {
+                { name = "PBAEStunSpell2", cond = function(self) return Config:GetSetting('DoAEGrind') end, },
                 { name = "ManaNuke",       cond = function(self) return Core.IsModeActive("ModernEra") end, },
                 { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
                 { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
@@ -1771,6 +1811,20 @@ local _ClassConfig = {
             FAQ = "Why am I not clicking my chest item?",
             Answer = "Most Chest slot items after level 75ish have a clickable effect.\n" ..
                 "ENC is set to use theirs during burns, so long as the item equipped has a clicky effect.",
+        },
+        ['DoAEGrind'] = {
+            DisplayName = "AoE Grinding",
+            Category = "Combat",
+            Tooltip = "Will spam AoE spells regardless of mode when mob density meets criteria",
+            Default = false,
+        },
+        ['AEGrindMinHaters'] = {
+            DisplayName = "Min XTHaters for AE grind strategy",
+            Category = "Combat",
+            Tooltip = "If there are less than x mobs on XT you will not use AE grind spells",
+            Default = 4,
+            Min = 1,
+            Max = 100,     
         },
     },
 }
