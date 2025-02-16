@@ -8,11 +8,11 @@ local ItemManager = require("utils.item_manager")
 local DanNet      = require('lib.dannet.helpers')
 local Logger      = require("utils.logger")
 
-local shouldAEChain = function()
+shouldAEGrind = function()
     return Core.IsModeActive("Fire")
-        and Config:GetSetting('DoAEChain')
+        and Config:GetSetting('DoAEGrind')
         and (Casting.HaveManaToNuke() or Casting.BurnCheck())
-        and Targeting.GetXTHaterCount() >= Config:GetSetting('AEChainMinTargets')
+        and Targeting.GetXTHaterCount() >= Config:GetSetting('AEGrindMinHaters')
 end
 
 _ClassConfig      = {
@@ -628,6 +628,7 @@ _ClassConfig      = {
             "Child of Earth",
             "Greater Vocaration: Earth",
             "Vocarate: Earth",
+            "Greater Conjuration: Earth",
             "Conjuration: Earth",
             "Lesser Conjuration: Earth",
             "Minor Conjuration: Earth",
@@ -869,10 +870,10 @@ _ClassConfig      = {
             "Wind of the Desert",
         },
         ['AE1'] = {
-            "Maelstrom of Electricity",
+            "Scintillation",
         },
         ['AE2'] = {
-            "Manastorm",  
+            "Sun Storm",  
         },
     },
     ['HealRotationOrder'] = {
@@ -932,10 +933,10 @@ _ClassConfig      = {
             name = 'Malo',
             state = 1,
             steps = 1,
-            load_cond = function() return Config:GetSetting('DoMalo') and not shouldAEChain() end,
+            load_cond = function() return Config:GetSetting('DoMalo') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
-            cond = function(self, combat_state)
-                return combat_state == "Combat" and not Casting.IAmFeigning() and mq.TLO.Me.PctMana() >= Config:GetSetting('ManaToDebuff')
+            cond = function(self, combat_state, targetId)
+                return combat_state == "Combat" and not Casting.IAmFeigning() and not shouldAEGrind() and (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
             end,
         },
         {
@@ -1030,12 +1031,14 @@ _ClassConfig      = {
             end
         end,
         handle_pet_toys = function(self)
-            if mq.TLO.Me.FreeInventory() < 2 or mq.TLO.Me.Level() < 73 then
-                Logger.log_debug("handle_pet_toys() ==> \arFailed your level is below 73 or you dont have inv slots open!")
+            if mq.TLO.Me.FreeInventory() < 2 then
+                Logger.log_error("handle_pet_toys() ==> \arFailed you dont have inv slots open!")
+                --Logger.log_verbose("handle_pet_toys() ==> \arFailed your pet already has weapons!")
                 return false
             end
             if (mq.TLO.Me.Pet.Equipment("Primary")() or 0) ~= 0 then
-                Logger.log_verbose("handle_pet_toys() ==> \arFailed your pet already has weapons!")
+                Logger.log_error("handle_pet_toys() ==> \arFailed your pet already has weapons!")
+                --Logger.log_verbose("handle_pet_toys() ==> \arFailed your pet already has weapons!")
                 return false
             end
 
@@ -1064,18 +1067,18 @@ _ClassConfig      = {
             local petToyResolvedSpell = self.ResolvedActionMap[string.format("Pet%sSummon", type)]
 
             if not petToyResolvedSpell or not petToyResolvedSpell() then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed to resolve Pet%sSummon item type!", type)
+                Logger.log_error("summon_pet_toy() ==> \arFailed to resolve Pet%sSummon item type!", type)
                 return false
             end
 
             if mq.TLO.Me.Level() < petToyResolvedSpell.Level() then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed your level is below the pet toy spell(%s) level: %d!", petToyResolvedSpell.RankName(),
+                Logger.log_error("summon_pet_toy() ==> \arFailed your level is below the pet toy spell(%s) level: %d!", petToyResolvedSpell.RankName(),
                     petToyResolvedSpell.Level())
                 return false
             end
 
             if not Casting.SpellReady(petToyResolvedSpell) then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed SpellReady() Check!", type)
+                Logger.log_error("summon_pet_toy() ==> \arFailed SpellReady() Check!", type)
                 return false
             end
 
@@ -1089,7 +1092,7 @@ _ClassConfig      = {
             end
 
             if openSlot == 0 then
-                Logger.log_super_verbose("summon_pet_toy() ==> \arFailed to find open top level inv slot!", openSlot)
+                Logger.log_error("summon_pet_toy() ==> \arFailed to find open top level inv slot!", openSlot)
                 return
             end
 
@@ -1616,7 +1619,7 @@ _ClassConfig      = {
                 name = "ChaoticNuke",
                 type = "Spell",
                 cond = function(self, _)
-                    return Core.IsModeActive("Fire") and not (Casting.HaveManaToNuke() or Casting.BurnCheck())
+                    return Core.IsModeActive("Fire") and (Casting.HaveManaToNuke() or Casting.BurnCheck())
                 end,
             },
             {
@@ -1629,17 +1632,17 @@ _ClassConfig      = {
             {
                 name = "AE0",
                 type = "Spell",
-                cond = function(self) return shouldAEChain() end,
+                cond = function(self) return shouldAEGrind() end,
             },
             {
                 name = "AE1",
                 type = "Spell",
-                cond = function(self) return shouldAEChain() end,
+                cond = function(self) return shouldAEGrind() end,
             },
             {
                 name = "AE2",
                 type = "Spell",
-                cond = function(self) return shouldAEChain() end,
+                cond = function(self) return shouldAEGrind() end,
             },
             {
                 name = "VolleyNuke",
@@ -1740,13 +1743,6 @@ _ClassConfig      = {
         },
         ['Downtime'] = {
             {
-                name = "Elemental Form: Water",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.SelfBuffAACheck(aaName) and Casting.AAReady(aaName)
-                end,
-            },
-            {
                 name = "Elemental Conversion",
                 type = "AA",
                 cond = function(self, aaName)
@@ -1837,7 +1833,7 @@ _ClassConfig      = {
                 end,
             },
             {
-                name = "Elemental Form",
+                name = "Elemental Form: Water",
                 type = "AA",
                 cond = function(self, aaName)
                     return Casting.SelfBuffAACheck(aaName) and Casting.AAReady(aaName)
@@ -1967,7 +1963,7 @@ _ClassConfig      = {
             gem = 7,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = 'AE0', cond = function() return Config:GetSetting('DoAEChain') end, },
+                { name = 'AE0', cond = function() return Config:GetSetting('DoAEGrind') end, },
                 {
                     name = "AllianceBuff",
                     cond = function(self)
@@ -1981,7 +1977,6 @@ _ClassConfig      = {
             gem = 8,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "AE1", cond = function() return Config:GetSetting('DoAEChain') end, },
                 { name = "GatherMana", },
             },
         },
@@ -1989,7 +1984,7 @@ _ClassConfig      = {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "AE2", cond = function() return Config:GetSetting('DoAEChain') end, },         
+                { name = "AE1", cond = function() return Config:GetSetting('DoAEGrind') end, },         
                 { name = "DichoSpell", },
             },
         },
@@ -2132,7 +2127,7 @@ _ClassConfig      = {
             DisplayName = "Do Chest Click",
             Category = "Utilities",
             Tooltip = "Click your chest item",
-            Default = false,
+            Default = mq.TLO.MacroQuest.BuildName() ~= "Emu",
             FAQ = "How do I use my chest clicky?",
             Answer = "You can use the [DoChestClick] feature to click your chest item.",
         },
@@ -2233,24 +2228,19 @@ _ClassConfig      = {
             Answer =
             "The Focus of Arcanum series of AA decreases your spell resist rates.\nIf you have purchased all four, you can likely easily weave them to keep 100% uptime on one.",
         },
-        ['DoAEChain'] = {
-            DisplayName = "AE Chain",
+        ['DoAEGrind'] = {
+            DisplayName = "AoE Grinding",
             Category = "Spells and Abilities",
-            Tooltip = "Lul",
-            RequiresLoadoutChange = true,
+            Tooltip = "Will spam AoE spells regardless of mode when mob density meets criteria",
             Default = false,
-            FAQ = "What is AE Chain?",
-            Answer = "Mage will chain AE spells",
         },
-        ['AEChainMinTargets'] = {
-            DisplayName = "Minimum AE Chain Targets",
+        ['AEGrindMinHaters'] = {
+            DisplayName = "Min AE grind haters",
             Category = "Spells and Abilities",
-            Tooltip = "The minimum number of aggro xtarget mobs before chaining AE occurs",
-            Default = 3,
+            Tooltip = "If there are less than x mobs on XT you will not use AE grind spells",
+            Default = 4,
             Min = 1,
-            Max = 6,
-            FAQ = "What is Min AE Chain Targets",
-            Answer = "It's the minimum targets before EfE chain occurs"         
+            Max = 100,     
         },
     },
 }

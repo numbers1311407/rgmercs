@@ -11,7 +11,7 @@ local Targeting = require("utils.targeting")
 local Casting   = require("utils.casting")
 
 return {
-    _version         = "1.0 - Project Lazarus",
+    _version         = "1.0 - Project Lazarus Custom",
     _author          = "Derple",
     ['Modes']        = {
         'Combo',
@@ -558,6 +558,15 @@ return {
             "Thundaka",
             "Mana Weave",
         },
+        ["IcePBAE"] = {
+            "Winds of Gelid",
+        },
+        ["FirePBAE"] = {
+            "Jyll's Wave of Heat", 
+        },
+        ['MagicPBAE'] = {
+            "Jyll's Static Pulse",
+        },
     },
     ['ChatBegList']  = {
         ['WizBegs'] = {
@@ -689,13 +698,22 @@ return {
             end,
         },
         {
+            name = 'AoE Grind DPS',
+            state = 1,
+            steps = 1,
+            targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and Targeting.GetAutoTargetPctHPs() <= Config:GetSetting('RainMinTargetHP') and
+                    Targeting.GetXTHaterCount() >= Config:GetSetting('AEGrindMinHaters')
+            end,
+        },
+        {
             name = 'DPS',
             state = 1,
             steps = 1,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
-                return combat_state == "Combat" and (Targeting.GetAutoTargetPctHPs() > Config:GetSetting('RainMinTargetHP') or
-                    Targeting.GetXTHaterCount() < Config:GetSetting('RainMinHaters'))
+                return combat_state == "Combat" and (not Config:GetSetting('DoAEGrind') or Targeting.GetXTHaterCount() < Config:GetSetting('AEGrindMinHaters'))
             end,
         },
         {
@@ -1062,6 +1080,36 @@ return {
                 end,
             },
         },
+        ['AoE Grind DPS'] = {
+            {
+                name = "IcePBAE",
+                type = "Spell",
+                cond = function(self, spell)
+                    return true
+                end,
+            },
+            {
+                name = "IceRainNuke",
+                type = "Spell",
+                cond = function(self, spell)
+                    return true
+                end,                
+            },
+            {
+                name = "FireRainNuke",
+                type = "Spell",
+                cond = function(self, spell)
+                    return true
+                end,            
+            },
+            {
+                name = "FirePBAE",
+                type = "Spell",
+                cond = function(self, spell)
+                    return true
+                end,
+            },
+        },
         ['Downtime'] = {
             {
                 name = "SelfHPBuff",
@@ -1181,11 +1229,8 @@ return {
             spells = {
                 { name = "FuseNuke", },
                 {
-                    name = "IceRainNuke",
-                    active_cond = function(self) return self.settings.DoRain end,
-                    cond = function(self)
-                        return Modules:ExecModule("Class", "GetClassModeName") == "Ice" or Modules:ExecModule("Class", "GetClassModeName") == "Combo"
-                    end,
+                    name = "FirePBAE",
+                    cond = function(self) return self.settings.DoAEGrind end,
                 },
                 {
                     name = "IceNuke",
@@ -1204,6 +1249,10 @@ return {
         {
             gem = 5,
             spells = {
+                {
+                    name = "IcePBAE",
+                    cond = function(self) return self.settings.DoAEGrind end,
+                },
                 { name = "TwincastSpell", },
                 { name = "SnareSpell",    cond = function(self) return self.settings.DoSnare end, },
                 { name = "StunSpell", },
@@ -1225,13 +1274,6 @@ return {
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
                 {
-                    name = "FireRainNuke",
-                    active_cond = function(self) return self.settings.DoRain end,
-                    cond = function(self)
-                        return Modules:ExecModule("Class", "GetClassModeName") == "Fire" or Modules:ExecModule("Class", "GetClassModeName") == "Combo"
-                    end,
-                },
-                {
                     name = "PetSpell",
                     cond = function(self) return mq.TLO.Me.Level() < 79 end,
                 },
@@ -1249,12 +1291,34 @@ return {
         {
             gem = 10,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = { { name = "FireRainLureNuke", }, },
+            spells = {
+                {
+                    name = "FireRainNuke",
+                    active_cond = function(self) return self.settings.DoRain or self.settings.DoAEGrind end,
+                    cond = function(self)
+                        return Config:GetSetting('DoAEGrind')
+                            or Modules:ExecModule("Class", "GetClassModeName") == "Fire"
+                            or Modules:ExecModule("Class", "GetClassModeName") == "Combo"
+                    end,
+                },
+                { name = "FireRainLureNuke", },
+            },
         },
         {
             gem = 11,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = { { name = "ChaosNuke", }, },
+            spells = {
+                {
+                    name = "IceRainNuke",
+                    active_cond = function(self) return self.settings.DoRain or self.settings.DoAEGrind end,
+                    cond = function(self)
+                        return Config:GetSetting('DoAEGrind')
+                            or Modules:ExecModule("Class", "GetClassModeName") == "Ice"
+                            or Modules:ExecModule("Class", "GetClassModeName") == "Magic"
+                    end,
+                },                
+                { name = "ChaosNuke", },
+            },
         },
         {
             gem = 12,
@@ -1287,7 +1351,7 @@ return {
             DisplayName = "Do Chest Click",
             Category = "Utilities",
             Tooltip = "Click your chest item",
-            Default = false,
+            Default = mq.TLO.MacroQuest.BuildName() ~= "Emu",
             FAQ = "How do I use my chest item Clicky?",
             Answer = "Enable [DoChestClick] to use your chest item clicky.",
         },
@@ -1365,6 +1429,20 @@ return {
             FAQ = "How do I use Rain Spells?",
             Answer = "Set the [RainMinTargetHP] to the minimum HP % you want the target to be at before using Rain Spells.\n" ..
                 "And make sure you have [DoRain] enabled.",
+        },
+        ['DoAEGrind'] = {
+            DisplayName = "AoE Grinding",
+            Category = "Combat",
+            Tooltip = "Will spam AoE spells regardless of mode when mob density meets criteria",
+            Default = false,
+        },
+        ['AEGrindMinHaters'] = {
+            DisplayName = "Min XTHaters for AE grind strategy",
+            Category = "Combat",
+            Tooltip = "If there are less than x mobs on XT you will not use AE grind spells",
+            Default = 4,
+            Min = 1,
+            Max = 100,     
         },
         ['DoGOMCheck']      = {
             DisplayName = "Do GOM Check",

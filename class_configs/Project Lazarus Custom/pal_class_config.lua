@@ -11,8 +11,7 @@ return {
         IsTanking = function() return Core.IsModeActive("Tank") end,
         IsHealing = function() return true end,
         IsCuring = function() return Config:GetSetting('DoCures') end,
-        --IsRezing = function() return (Config:GetSetting('DoBattleRez') and not Core.IsTanking()) or Targeting.GetXTHaterCount() == 0 end,
-        IsRezing = function() return false end,
+        IsRezing = function() return (Config:GetSetting('DoBattleRez') and not Core.IsTanking()) or Targeting.GetXTHaterCount() == 0 end,
         --Disabling tank battle rez is not optional to prevent settings in different areas and to avoid causing more potential deaths
     },
     ['Modes']             = {
@@ -24,20 +23,10 @@ return {
             if Casting.AAReady("Radiant Cure") then
                 return Casting.UseAA("Radiant Cure", targetId)
             end
-            -- TODO: Consider the impact of memorizing cures outside of combat or increasing number of options in settings
-            -- local cureSpell = Core.GetResolvedActionMapItem('Puritycure')
-
-            -- if type:lower() == "poison" then
-            -- cureSpell = Core.GetResolvedActionMapItem('Puritycure')
-            -- elseif type:lower() == "curse" then
-            -- cureSpell = Core.GetResolvedActionMapItem('Puritycure')
-            --TODO: Add Corruption AbilitySets
-            -- elseif type:lower() == "corruption" then
-            -- cureSpell = Core.GetResolvedActionMapItem('')
-            -- end
-
-            -- if not cureSpell or not cureSpell() then return false end
-            -- return Casting.UseSpell(cureSpell.RankName.Name(), targetId, true)
+            
+            local cureSpell = Core.GetResolvedActionMapItem('CrusaderCure')
+            if not cureSpell or not cureSpell() then return false end
+            return Casting.UseSpell(cureSpell.RankName.Name(), targetId, true)
         end,
     },
     ['ItemSets']          = {
@@ -47,107 +36,12 @@ return {
         },
     },
     ['AbilitySets']       = {
-        ["CrushTimer6"] = {
-            -- Timer 6 - Crush (with damage)
-            "Crush of Compunction",  -- Level 85
-            "Crush of Repentance",   -- Level 90
-            "Crush of Tides",        -- Level 95
-            "Crush of Tarew",        -- Level 100
-            "Crush of Povar",        -- Level 105
-            "Crush of E'Ci",         -- Level 110
-            "Crush of Restless Ice", -- Level 115
-            "Crush of the Umbra",    -- Level 120
-            "Crush of the Heroic",   -- Level 124
-        },
-        ["CrushTimer5"] = {
-            -- Timer 5 - Crush
-            "Crush of the Crying Seas",   -- Level 82
-            "Crush of Marr",              -- Level 87
-            "Crush of Oseka",             -- Level 92
-            "Crush of the Iceclad",       -- Level 97
-            "Crush of the Darkened Sea",  -- Level 102
-            "Crush of the Timorous Deep", -- Level 107
-            "Crush of the Grotto",        -- Level 112
-            "Crush of the Twilight Sea",  -- Level 117
-            "Crush of the Wayunder",      -- Level 122
-        },
-        ["HealNuke"] = {
-            -- Timer 7 - HealNuke
-            "Glorious Vindication",   -- Level 85
-            "Glorious Exoneration",   -- Level 90
-            "Glorious Exculpation",   -- Level 95
-            "Glorious Expurgation",   -- Level 100
-            "Brilliant Vindication",  -- Level 105
-            "Brilliant Exoneration",  -- Level 110
-            "Brilliant Exculpation",  -- Level 115
-            "Brilliant Acquittal",    -- Level 120
-            "Brilliant Denouncement", -- Level 125
-        },
-        ["TempHP"] = {
-            "Steely Stance",
-            "Stubborn Stance",
-            "Stoic Stance",
-            "Staunch Stance",
-            "Steadfast Stance",
-            "Defiant Stance",
-            "Stormwall Stance",
-            "Adamant Stance",
-            "Unwavering Stance",
-        },
-        ["Preservation"] = {
-            -- Timer 12 - Preservation
-            "Ward of Tunare",               -- Level 70
-            "Sustenance of Tunare",         -- Level 80
-            "Preservation of Tunare",       -- Level 85
-            "Preservation of Marr",         -- Level 90
-            "Preservation of Oseka",        -- Level 95
-            "Preservation of the Iceclad",  -- Level 100
-            "Preservation of Rodcet",       -- Level 110
-            "Preservation of the Grotto",   -- Level 115
-            "Preservation of the Basilica", -- Level 120
-            "Preservation of the Fern",     -- Level 125
-        },
-        ["Lowaggronuke"] = {
-            --- Nuke Heal Target - Censure
-            "Denouncement",
-            "Reprimand",
-            "Ostracize",
-            "Admonish",
-            "Censure",
-            "Remonstrate",
-            "Upbraid",
-            "Chastise",
-        },
         ["Incoming"] = {
             -- Harmonius Blessing - Empires of Kunark spell
             "Harmonious Blessing",
             "Concordant Blessing",
             "Confluent Blessing",
             "Penumbral Blessing",
-        },
-        ["DebuffNuke"] = {
-            -- Undead DebuffNuke
-            "Last Rites",   -- Level 68 - Timer 7
-            "Burial Rites", -- Level 71 - Timer 7
-            "Benediction",  -- Level 76
-            "Eulogy",       -- Level 81
-            "Elegy",        -- Level 86
-            "Paean",        -- Level 91
-            "Laudation",    -- Level 96
-            "Consecration", -- Level 101
-            "Remembrance",  -- Level 106
-            "Requiem",      -- Level 111
-            "Hymnal",       -- Level 116
-            "Revelation",   -- Level 121
-        },
-        ["Healproc"] = {
-            --- Proc Buff Heal target of Target => LVL 97
-            "Restoring Steel",
-            "Regenerating Steel",
-            "Rejuvenating Steel",
-            "Reinvigorating Steel",
-            "Revitalizating Steel",
-            "Renewing Steel",
         },
         ["FuryProc"] = {
             --- Fury Proc Strike
@@ -171,17 +65,6 @@ return {
             "Instrument of Nife", -- Level 26, 243pt
             "Ward of Nife",       -- Level 62, 300pt
             "Silvered Fury",      -- Level 67, 390pt
-        },
-        ["Aurora"] = {
-            "Aurora of Dawning",
-            "Aurora of Dawnlight",
-            "Aurora of Daybreak",
-            "Aurora of Splendor",
-            "Aurora of Sunrise",
-            "Aurora of Dayspring",
-            "Aurora of Morninglight",
-            "Aurora of Wakening",
-            "Aurora of Realizing",
         },
         ["StunTimer5"] = {
             -- Timer 5 - Hate Stun
@@ -219,26 +102,11 @@ return {
             "Pious Force",     -- Level 116
             "Avowed Force",    -- Level 121
         },
-        ["Healstun"] = {
-            --- Heal Stuns T3 12s recast
-            "Force of the Avowed", --Level 124
-            "Force of Generosity",
-            "Force of Reverence",
-            "Force of Ardency",
-            "Force of Mercy",
-            "Force of Sincerity",
+        ["AEStun"] = {
+            "Stun Command",  
         },
-        ["Healward"] = {
-            --- Healing ward Heals Target of target and wards self. Divination based heal/ward
-            "Protective Acceptance",
-            "Protective Revelation",
-            "Protective Confession",
-            "Protective Devotion",
-            "Protective Dedication",
-            "Protective Allegiance",
-            "Protective Proclamation",
-            "Protective Devotion",
-            "Protective Consecration",
+        ["AEDDStun"] = {
+            "The Silent Command",
         },
         ["Aego"] = {
             --- Pally Aegolism
@@ -296,14 +164,6 @@ return {
             "Splash of Atonement",
             "Splash of Depuration",
             "Splash of Exaltation",
-        },
-        ["Healtaunt"] = {
-            --- Valiant Taunt With Built in heal.
-            "Valiant Disruption",
-            "Valiant Deflection",
-            "Valiant Defense",
-            "Valiant Diversion",
-            "Valiant Deterrence",
         },
         ["Affirmation"] = {
             --- Improved Super Taunt - Gets you Aggro for X seconds and reduces other Haters generation.
@@ -372,21 +232,7 @@ return {
             "Culpability",
             "Angst",
         },
-        ["Reverseds"] = {
-            --- Reverse DS
-            "Mark of the Saint",
-            "Mark of the Crusader",
-            "Mark of the Pious",
-            "Mark of the Pure",
-            "Mark of the Defender",
-            "Mark of the Reverent",
-            "Mark of the Exemplar",
-            "Mark of the Commander",
-            "Mark of the Jade Cohort",
-            "Mark of the Eclipsed Cohort",
-            "Mark of the Forgotten Hero",
-        },
-        ["Cleansehot"] = {
+        ["CleanseHot"] = {
             --- Pally Hot
             "Ethereal Cleansing",   -- Level 44
             "Celestial Cleansing",  -- Level 59
@@ -403,20 +249,6 @@ return {
             "Sincere Cleansing",    -- Level 113
             "Forthright Cleansing", -- Level 118
             "Avowed Cleansing",     -- Level 123
-        },
-        ["BurstHeal"] = {
-            --- Burst Heal - heals target or Target of target 73-115
-            "Burst of Sunlight",
-            "Burst of Morrow",
-            "Burst of Dawnlight",
-            "Burst of Daybreak",
-            "Burst of Splendor",
-            "Burst of Sunrise",
-            "Burst of Dayspring",
-            "Burst of Morninglight",
-            "Burst of Wakening",
-            "Burst of Dawnbreak",
-            "Burst of Sunspring",
         },
         ["ArmorSelfBuff"] = {
             --- Self Buff Armor Line Ac/Hp/Mana regen
@@ -532,7 +364,7 @@ return {
             "Calm",
             "Lull",
         },
-        ["Toucheal"] = {
+        ["TouchHeal"] = {
             --- Touch Heal Line LVL61 - LVL115
             "Touch of Nife",
             "Touch of Piety",
@@ -548,13 +380,6 @@ return {
             "Soothing Touch",
             "Avowed Touch",
         },
-        ["Dicho"] = {
-            --- Dissident Stun
-            "Dichotomic Force",
-            "Dissident Force",
-            "Composite Force",
-            "Ecliptic Force",
-        },
         ["Puritycure"] = {
             --- Purity Cure Poison/Diease Cure Half Power to curse
             "Balanced Purity",
@@ -565,19 +390,8 @@ return {
             "Ardent Purity",
             "Merciful Purity",
         },
-        ["Challengetaunt"] = {
-            --- Challenge Taunt Over time Debuff
-            "Challenge for Honor",
-            "Trial For Honor",
-            "Charge for Honor",
-            "Confrontation for Honor",
-            "Provocation for Honor",
-            "Demand for Honor",
-            "Impose for Honor",
-            "Refute for Honor",
-            "Protest for Honor",
-            "Parlay for Honor",
-            "Petition for Honor",
+        ["CrusaderCure"] = {
+            "Crusader's Touch",
         },
         ["Piety"] = {
             -- One Off Buffs
@@ -777,14 +591,6 @@ return {
                 end,
             },
             {
-                name = "Aurora",
-                type = "Spell",
-                cond = function(self, _)
-                    if not mq.TLO.Group() then return false end
-                    return mq.TLO.Group.Injured(Config:GetSetting('GroupHealPoint'))() > Config:GetSetting('GroupInjureCnt')
-                end,
-            },
-            {
                 name = "Gift of Life",
                 type = "AA",
                 cond = function(self, aaName)
@@ -885,13 +691,6 @@ return {
                 end,
             },
             {
-                name = "Thunder of Karana",
-                type = "AA",
-                cond = function(self, aaName)
-                    return Casting.AAReady(aaName) and Config:GetSetting('DoNuke')
-                end,
-            },
-            {
                 name = "Group Armor of The Inquisitor",
                 type = "AA",
                 cond = function(self, aaName)
@@ -910,13 +709,6 @@ return {
                 type = "Disc",
                 cond = function(self, discSpell)
                     return not mq.TLO.Me.ActiveDisc.ID() and Casting.TargetedDiscReady(discSpell)
-                end,
-            },
-            {
-                name = "Healproc",
-                type = "Spell",
-                cond = function(self, spell)
-                    return not Core.IsTanking() and Casting.SpellReady(spell)
                 end,
             },
         },
@@ -1005,11 +797,25 @@ return {
                 end,
             },
             {
-                name = "BurstHeal",
+                name = "TouchHeal",
                 type = "Spell",
                 cond = function(self, spell)
                     return Casting.SpellReady(spell) and
                         (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) < Config:GetSetting('TotHealPoint')
+                end,
+            },
+            {
+                name = "AEDDStun",
+                type = "Spell",
+                cond = function(self, spell)
+                    return Targeting.GetXTHaterCount() >=3 and Casting.SpellReady(spell) and Casting.DetSpellCheck(spell)
+                end,
+            },
+            {
+                name = "AEStun",
+                type = "Spell",
+                cond = function(self, spell)
+                    return Targeting.GetXTHaterCount() >=3 and Casting.SpellReady(spell) and Casting.DetSpellCheck(spell)
                 end,
             },
             {
@@ -1063,13 +869,6 @@ return {
                 end,
             },
             {
-                name = "Challengetaunt",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and not Casting.TargetHasBuff(spell)
-                end,
-            },
-            {
                 name = "StunTimer4",
                 type = "Spell",
                 cond = function(self, spell)
@@ -1091,52 +890,10 @@ return {
                 end,
             },
             {
-                name = "CrushTimer5",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
-            },
-            {
-                name = "CrushTimer6",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
-            },
-            {
                 name = "Armor of the Inquisitor",
                 type = "AA",
                 cond = function(self, aaName)
                     return Casting.AAReady(aaName)
-                end,
-            },
-            {
-                name = "Healtaunt",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
-            },
-            {
-                name = "HealNuke",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
-            },
-            {
-                name = "Lowaggronuke",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
-                end,
-            },
-            {
-                name = "Dicho",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
                 end,
             },
             {
@@ -1185,13 +942,6 @@ return {
                 end,
             },
             {
-                name = "Dicho",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and (mq.TLO.Me.TargetOfTarget.PctHPs() or 0) <= 35
-                end,
-            },
-            {
                 name = "TotLightHeal",
                 type = "Spell",
                 cond = function(self, spell)
@@ -1200,7 +950,7 @@ return {
                 end,
             },
             {
-                name = "BurstHeal",
+                name = "TouchHeal",
                 type = "Spell",
                 cond = function(self, spell)
                     return Casting.SpellReady(spell) and
@@ -1208,46 +958,10 @@ return {
                 end,
             },
             {
-                name = "DebuffNuke",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and
-                        ((Targeting.TargetBodyIs(mq.TLO.Target, "Undead") or mq.TLO.Me.Level() >= 96) and not Casting.TargetHasBuff(spell) and Config:GetSetting('DoNuke'))
-                end,
-            },
-            {
                 name = "AntiUndeadNuke",
                 type = "Spell",
                 cond = function(self, spell)
                     return Casting.SpellReady(spell) and Targeting.TargetBodyIs(mq.TLO.Target, "Undead")
-                end,
-            },
-            {
-                name = "Reverseds",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and Casting.TargetHasBuff(spell) and Config:GetSetting('DoReverseDS')
-                end,
-            },
-            {
-                name = "Lowaggronuke",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and Config:GetSetting('DoNuke')
-                end,
-            },
-            {
-                name = "CrushTimer6",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and Config:GetSetting('DoNuke') and (mq.TLO.Me.SecondaryPctAggro() or 0) > 60
-                end,
-            },
-            {
-                name = "HealNuke",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell)
                 end,
             },
             {
@@ -1325,20 +1039,6 @@ return {
                 end,
             },
             {
-                name = "Preservation",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and Casting.SelfBuffCheck(spell) and Core.IsModeActive("Tank")
-                end,
-            },
-            {
-                name = "TempHP",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Casting.SpellReady(spell) and Casting.SelfBuffCheck(spell) and Core.IsModeActive("Tank")
-                end,
-            },
-            {
                 name = "Incoming",
                 type = "Spell",
                 cond = function(self, spell)
@@ -1394,100 +1094,69 @@ return {
         {
             gem = 1,
             spells = {
-                { name = "CrushTimer6", },
                 { name = "StunTimer5", },
-                { name = "Challengetaunt", },
-                { name = "LightHeal", },
             },
         },
         {
             gem = 2,
             spells = {
-                { name = "Lowaggronuke", cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "CrushTimer5", },
                 { name = "StunTimer4", },
             },
         },
         {
             gem = 3,
             spells = {
-                { name = "HealNuke",    cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "LessonStun",  cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "Healtaunt", },
                 { name = "LessonStun", },
-                { name = "CrushTimer5", },
-                { name = "StunTimer5", },
             },
         },
         {
             gem = 4,
             spells = {
-                { name = "AntiUndeadNuke", cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "Lowaggronuke", },
-                { name = "CrushTimer6", },
-                { name = "LessonStun", },
                 { name = "WaveHeal", },
             },
         },
         {
             gem = 5,
             spells = {
-                { name = "WaveHeal",       cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "HealNuke", },
-                { name = "AntiUndeadNuke", },
-                { name = "TotLightHeal", },
+                { name = "WaveHeal2", },
             },
         },
         {
             gem = 6,
             spells = {
-                { name = "TotLightHeal", cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "WaveHeal2", },
-                { name = "BurstHeal", },
+                { name = "TotLightHeal", },
             },
         },
         {
             gem = 7,
             spells = {
-                { name = "BurstHeal",    cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "TotLightHeal", },
-                { name = "Preservation", },
-                { name = "LightHeal", },
+                { name = "TouchHeal", },
             },
         },
         {
             gem = 8,
             spells = {
-                { name = "Reverseds", cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "BurstHeal", },
-                { name = "TempHP", },
+                { name = "CleanseHot", },
             },
         },
         {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "DebuffNuke",     cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "Challengetaunt", },
-                { name = "Healward", },
+                { name = "AEStun", },
             },
         },
         {
             gem = 10,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "Healproc", cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "TempHP", },
-                { name = "HealNuke", },
+                { name = "AEDDStun", },
             },
         },
         {
             gem = 11,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "Aurora",         cond = function(self) return Core.IsModeActive('DPS') end, },
-                { name = "Preservation", },
-                { name = "DebuffNuke", },
                 { name = "AntiUndeadNuke", },
             },
         },
@@ -1495,30 +1164,16 @@ return {
             gem = 12,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "Dicho", },
-                { name = "Challengetaunt", },
+                { name = "CrusaderCure", },
             },
         },
         {
             gem = 13,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
-            spells = {
-            },
+            spells = {},
         },
     },
     ['PullAbilities']     = {
-        {
-            id = 'Challengetaunt',
-            Type = "Spell",
-            DisplayName = function() return Core.GetResolvedActionMapItem('Challengetaunt').RankName.Name() or "" end,
-            AbilityName = function() return Core.GetResolvedActionMapItem('Challengetaunt').RankName.Name() or "" end,
-            AbilityRange = 200,
-            cond = function(self)
-                local resolvedSpell = Core.GetResolvedActionMapItem('Challengetaunt')
-                if not resolvedSpell then return false end
-                return mq.TLO.Me.Gem(resolvedSpell.RankName.Name() or "")() ~= nil
-            end,
-        },
         {
             id = 'StunTimer4',
             Type = "Spell",
@@ -1619,14 +1274,6 @@ return {
             Default = mq.TLO.MacroQuest.BuildName() ~= "Emu",
             FAQ = "Why am I not clicking my chest item?",
             Answer = "Make sure you have the [DoChestClick] setting enabled.",
-        },
-        ['DoReverseDS']  = {
-            DisplayName = "Do Reverse DS",
-            Category = "Utilities",
-            Tooltip = "Cast Reverse DS",
-            Default = true,
-            FAQ = "Why am I not casting Reverse DS?",
-            Answer = "Make sure you have the [DoReverseDS] setting enabled.",
         },
         ['SummonArrows'] = {
             DisplayName = "Use Huntsman's Quiver",

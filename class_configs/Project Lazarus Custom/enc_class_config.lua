@@ -7,7 +7,7 @@ local Casting      = require("utils.casting")
 local Logger       = require("utils.logger")
 
 local shouldChainStun = function()
-    return Config:GetSetting('DoChainStun') and Targeting.GetXTHaterCount() >= Config:GetSetting('ChainStunMinHaters')
+    return Config:GetSetting('DoAEGrind') and Targeting.GetXTHaterCount() >= Config:GetSetting('AEGrindMinHaters')
 end
 
 local _ClassConfig = {
@@ -263,14 +263,14 @@ local _ClassConfig = {
             "Legion of Alendar",
             "Circle of Alendar",
         },
-        ['SingleDoTShield'] = {
+        ['SingleDotShield'] = {
             "Aegis of Xetheg",
             "Aegis of Cekenar",
             "Aegis of Milyex",
             "Aegis of the Indagator",
             "Aegis of the Keeper",
         },
-        ['GroupDoTShield'] = {
+        ['GroupDotShield'] = {
             "Legion of Dhakka",
             "Legion of Xetheg",
             "Legion of Cekenar",
@@ -337,18 +337,6 @@ local _ClassConfig = {
             "Color Skew",
             "Color Shift",
             "Color Flux",
-        },
-        ['PBAEStunSpell0'] = {
-            "Color Flux",
-        },
-        ['PBAEStunSpell1'] = {
-            "Color Shift",
-        },
-        ['PBAEStunSpell2'] = {
-            "Color Skew",
-        },
-        ['PBAEStunSpell3'] = {
-            "Color Slant",
         },
         ['TargetAEStun'] = {
             "Remote Color Calibration",
@@ -485,7 +473,7 @@ local _ClassConfig = {
             "Dissident Reinforcement",
             "Dichotomic Reinforcement",
         },
-        ['DoTSpell1'] = {
+        ['DotSpell1'] = {
             ---DoT 1 -- >=LVL1
             "Asphyxiating Grasp",
             "Throttling Grip",
@@ -533,37 +521,7 @@ local _ClassConfig = {
             "Confusing Constriction",
             "Baffling Constriction",
         },
-        ['NukeSpell1'] = {
-            --- Nuke 1 -- >= LVL7
-            "Mindrend",
-            "Mindreap",
-            "Mindrift",
-            "Mindslash",
-            "Mindsunder",
-            "Mindcleave",
-            "Mindscythe",
-            "Mindblade",
-            "Spectral Assault",
-            "Polychaotic Assault",
-            "Multichromatic Assault",
-            "Polychromatic Assault",
-            "Colored Chaos",
-            "Psychosis",
-            "Madness of Ikkibi",
-            "Insanity",
-            "Dementing Visions",
-            "Dementia",
-            "Discordant Mind",
-            "Anarchy",
-            "Chaos Flux",
-            "Sanity Warp",
-            "Chaotic Feedback",
-            "Chromarcana",
-            "Ancient: Neurosis",
-            "Ancient: Chaos Madness",
-            "Ancient: Chaotic Visions",
-        },
-        ['NukeSpell2'] = {
+        ['NukeSpell'] = {
             --- Nuke 1 -- >= LVL7
             "Mindrend",
             "Mindreap",
@@ -613,7 +571,7 @@ local _ClassConfig = {
             "Mental Appropriation",
             "Cognitive Appropriation",
         },
-        --Unused table, temporarily removed - was causing conflicts while resolving NukeSpell1 action maps (will revisit nukes later)
+        --Unused table, temporarily removed - was causing conflicts while resolving NukeSpell action maps (will revisit nukes later)
         -- ['ChromaNuke'] = {
         --- Chromatic Lowest Nuke - Normal -- >=LVL73
         -- "Polycascading Assault",
@@ -798,6 +756,18 @@ local _ClassConfig = {
         ['HasteManaCombo'] = {
             "Unified Alacrity",
         },
+        ['PBAEStunSpell0'] = {
+            "Color Cloud",
+        },
+        ['PBAEStunSpell1'] = {
+            "Color Skew",
+        },
+        ['PBAEStunSpell2'] = {
+            "Color Shift",
+        },
+        ['PBAEStunSpell3'] = {
+            "Color Flux",
+        },
     },
     ['RotationOrder']   = {
         {
@@ -838,31 +808,26 @@ local _ClassConfig = {
             steps = 1,
             load_cond = function() return Config:GetSetting('DoTash') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
-            cond = function(self, combat_state)
+            cond = function(self, combat_state, targetId)
                 return combat_state == "Combat" and Casting.DebuffConCheck() and not Casting.IAmFeigning() and
-                    mq.TLO.Me.PctMana() >= Config:GetSetting('ManaToDebuff')
+                    (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
             end,
         },
         { --Slow and Tash separated so we use both before we start DPS
             name = 'Slow',
             state = 1,
             steps = 1,
-            load_cond = function()
-                return Config:GetSetting('DoSlow') and not shouldChainStun()             
-            end,
+            load_cond = function() return Config:GetSetting('DoSlow') end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
-            cond = function(self, combat_state)
+            cond = function(self, combat_state, targetId)
                 return combat_state == "Combat" and Casting.DebuffConCheck() and not Casting.IAmFeigning() and
-                    mq.TLO.Me.PctMana() >= Config:GetSetting('ManaToDebuff')
+                    (Casting.HaveManaToDebuff() or Targeting.IsNamed(mq.TLO.Spawn(targetId)))
             end,
         },
         {
             name = 'Burn',
             state = 1,
             steps = 1,
-            load_cond = function ()
-                return not shouldChainStun()
-            end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and Casting.BurnCheck() and not Casting.IAmFeigning()
@@ -881,9 +846,7 @@ local _ClassConfig = {
             name = 'DPS(Default)',
             state = 1,
             steps = 1,
-            load_cond = function()
-                return Core.IsModeActive('Default') and not shouldChainStun()
-            end,
+            load_cond = function() return Core.IsModeActive("Default") end,
             targetId = function(self) return mq.TLO.Target.ID() == Config.Globals.AutoTargetID and { Config.Globals.AutoTargetID, } or {} end,
             cond = function(self, combat_state)
                 return combat_state == "Combat" and not Casting.IAmFeigning()
@@ -1097,7 +1060,8 @@ local _ClassConfig = {
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
                     if self:GetResolvedActionMapItem('HasteManaCombo') or not Config.Constants.RGMelee:contains(target.Class.ShortName()) then return false end
-                    return Casting.GroupBuffCheck(spell, target)
+                    return not Casting.GroupBuffCheck(spell, target) and
+                        Casting.GroupBuffCheck(mq.TLO.Spell("Unified Alacrity"), target) --stacking checks are incorrect with a common outside buff
                 end,
             },
             {
@@ -1109,7 +1073,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "GroupDoTShield",
+                name = "GroupDotShield",
                 type = "Spell",
                 active_cond = function(self, spell) return mq.TLO.Me.FindBuff("id " .. tostring(spell.ID()))() ~= nil end,
                 cond = function(self, spell, target)
@@ -1321,7 +1285,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "DoTSpell1",
+                name = "DotSpell1",
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoDot') then return false end
@@ -1345,14 +1309,7 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "NukeSpell1",
-                type = "Spell",
-                cond = function(self, spell, target)
-                    return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
-                end,
-            },
-            {
-                name = "NukeSpell2",
+                name = "NukeSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
@@ -1397,21 +1354,21 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "NukeSpell1",
+                name = "NukeSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
                 end,
             },
             { --Mana check used instead of dot mana check because this is spammed like a nuke
-                name = "DoTSpell1",
+                name = "DotSpell1",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
                 end,
             },
             { --this is not an error, we want the spell twice in a row as part of the rotation.
-                name = "DoTSpell1",
+                name = "DotSpell1",
                 type = "Spell",
                 cond = function(self, spell, target)
                     return (Casting.HaveManaToNuke() or Casting.BurnCheck()) and Casting.TargetedSpellReady(spell, target.ID())
@@ -1486,6 +1443,7 @@ local _ClassConfig = {
                 name = "CrippleSpell",
                 type = "Spell",
                 cond = function(self, spell, target)
+                    if Config:GetSetting('DoAEGrind') then return false end
                     if not Config:GetSetting('DoCripple') then return false end
                     return Targeting.IsNamed(mq.TLO.Target) and Casting.DetSpellCheck(spell) and Casting.TargetedSpellReady(spell, target.ID())
                 end,
@@ -1613,32 +1571,30 @@ local _ClassConfig = {
         {
             gem = 6,
             spells = {
-                { name = "PBAEStunSpell0", cond = function(self) return Config:GetSetting('DoChainStun') or false end, },
-                { name = "NukeSpell1", },
+                { name = "PBAEStunSpell0", cond = function(self) return Config:GetSetting('DoAEGrind') end, },
+                { name = "NukeSpell", },
             },
         },
         {
             gem = 7,
             spells = {
-                { name = "PBAEStunSpell1", cond = function(self) return Config:GetSetting('DoChainStun') or false end, },
-                { name = "DoTSpell1", },
+                { name = "PBAEStunSpell1", cond = function(self) return Config:GetSetting('DoAEGrind') end, },
+                { name = "DotSpell1", },
             },
         },
         {
             gem = 8,
             spells = {
-                { name = "PBAEStunSpell2", cond = function(self) return Config:GetSetting('DoChainStun') end, },
+                { name = "PBAEStunSpell2", cond = function(self) return Config:GetSetting('DoAEGrind') end, },
                 { name = "ManaNuke",       cond = function(self) return Core.IsModeActive("ModernEra") end, },
                 { name = "CrippleSpell",   cond = function(self) return Config:GetSetting('DoCripple') end, },
                 { name = "StripBuffSpell", cond = function(self) return Config:GetSetting('DoStripBuff') end, },
-                { name = "NukeSpell2",     cond = function(self) return true end, },
             },
         },
         {
             gem = 9,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "PBAEStunSpell3", cond = function(self) return Config:GetSetting('DoChainStun') end, },
                 { name = "NdtBuff", cond = function(self) return Core.IsModeActive("ModernEra") end, },
                 { name = "ManaDot", cond = function(self) return true end, },
             },
@@ -1741,25 +1697,6 @@ local _ClassConfig = {
             FAQ = "What is an Arcanum and why would I want to weave them?",
             Answer =
             "The Focus of Arcanum series of AA decreases your spell resist rates.\nIf you have purchased all four, you can likely easily weave them to keep 100% uptime on one.",
-        },       
-        ['DoChainStun'] = {
-            DisplayName = "Chain Stun",
-            Category = "Debuffs",
-            Tooltip = "Chain PBAE Stuns",
-            RequiresLoadoutChange = true,
-            Default = false,
-            FAQ = "What is this?",
-            Answer = "The [DoChainStun] setting enables chain stun mode, casting stuns repeatedly.",            
-        },
-        ['ChainStunMinHaters'] = {
-            DisplayName = "Chain Stun Min Haters",
-            Category = "Debuffs",
-            Tooltip = "The minimum number of xtarget haters before chain stunning",
-            Min = 1,
-            Max = 10,
-            Default = 4,
-            FAQ = "What is this?",
-            Answer = "The [ChainStunMinHaters] setting does something.",            
         },
         ['AESlowCount']      = {
             DisplayName = "Slow Count",
@@ -1870,10 +1807,24 @@ local _ClassConfig = {
             DisplayName = "Do Chest Click",
             Category = "Combat",
             Tooltip = "Click your equipped chest item during burns.",
-            Default = false,
+            Default = mq.TLO.MacroQuest.BuildName() ~= "Emu",
             FAQ = "Why am I not clicking my chest item?",
             Answer = "Most Chest slot items after level 75ish have a clickable effect.\n" ..
                 "ENC is set to use theirs during burns, so long as the item equipped has a clicky effect.",
+        },
+        ['DoAEGrind'] = {
+            DisplayName = "AoE Grinding",
+            Category = "Combat",
+            Tooltip = "Will spam AoE spells regardless of mode when mob density meets criteria",
+            Default = false,
+        },
+        ['AEGrindMinHaters'] = {
+            DisplayName = "Min XTHaters for AE grind strategy",
+            Category = "Combat",
+            Tooltip = "If there are less than x mobs on XT you will not use AE grind spells",
+            Default = 4,
+            Min = 1,
+            Max = 100,     
         },
     },
 }

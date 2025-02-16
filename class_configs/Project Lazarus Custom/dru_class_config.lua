@@ -10,8 +10,7 @@ local _ClassConfig = {
     ['ModeChecks']        = {
         IsHealing  = function() return true end,
         IsCuring   = function() return Core.IsModeActive("Heal") end,
-        --IsRezing   = function() return Config:GetSetting('DoBattleRez') or Targeting.GetXTHaterCount() == 0 end,
-        IsRezing = function() return false end,
+        IsRezing   = function() return Config:GetSetting('DoBattleRez') or Targeting.GetXTHaterCount() == 0 end,
         CanCharm   = function() return true end,
         IsCharming = function() return (Config:GetSetting('CharmOn') and mq.TLO.Pet.ID() == 0) end,
     },
@@ -46,12 +45,6 @@ local _ClassConfig = {
         },
     },
     ['AbilitySets']       = {
-        ['Alliance'] = {
-            --, Buff >= LVL102
-            "Arboreal Atonement",
-            "Arbor Tender's Coalition",
-            "Bosquetender's Alliance",
-        },
         ['CurePoison'] = {
             --Cure poison Lines Single Target
             "Cure Poison",
@@ -382,21 +375,6 @@ local _ClassConfig = {
             "Carapace of the Reptile",
             "Scales of the Reptile",
             "Skin of the Reptile",
-        },
-        ['NaturesWrathDot'] = {
-            -- Updated to 125
-            -- Natures Wrath DOT Line >= 75LVL -- On Bar
-            "Nature's Fervid Wrath",
-            "Nature's Blistering Wrath",
-            "Nature's Fiery Wrath",
-            "Nature's Withering Wrath",
-            "Nature's Scorching Wrath",
-            "Nature's Incinerating Wrath",
-            "Nature's Searing Wrath",
-            "Nature's Burning Wrath",
-            "Nature's Blazing Wrath",
-            "Nature's Sweltering Wrath",
-            "Nature's Boiling Wrath",
         },
         ['HordeDot'] = {
             -- Updated to 125
@@ -825,44 +803,19 @@ local _ClassConfig = {
             "Spirit of Eagle",
             "Flight of Eagles",
         },
-        ['ManaBear'] = {
-            -- Updated to 125
-            --Druid Mana Bear Growth Line
-            -- [] = "Nature Walker's Behest",
-            "Nurturing Growth",
-            "Nourishing Growth",
-            "Sustaining Growth",
-            "Bolstered Growth",
-            "Emboldened Growth",
-        },
         ['SingleDS'] = {
-            -- Updated to 125
-            --Single Target Damage Shield
-            "Shield of Thistles",
-            "Shield of Barbs",
-            "Shield of Brambles",
-            "Shield of Spikes",
-            "Shield of Thorns",
             "Shield of Blades",
-            "Shield of Bracken",
-            "Nettle Shield",
-            "Viridifloral Shield",
-            "Viridifloral Bulwark",
-            "Brierbloom Bulwark",
-            "Bonebriar Bulwark",
-            "Spineburr Bulwark",
-            "Spikethistle Bulwark",
-            "Daggerspur Bulwark",
-            "Daggerspike Bulwark",
-            "Icebriar Bulwark",
-            "Nightspire Bulwark",
-            "Bramblespike Bulwark",
         },
         ['RezSpell'] = {
             'Incarnate Anew', -- Level 59
             'Resuscitate',    --emu only
             'Revive',         --emu only
             'Reanimation',    --emu only
+        },
+        ['WordGroupHeal'] = {
+            'Word of Restoration',
+            'Word of Healing',
+            'Word of Health',
         },
     },
     ['HealRotationOrder'] = {
@@ -946,6 +899,13 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     return Casting.AAReady(aaName) and (target.PctHPs() or 999) < Config:GetSetting('BigHealPoint')
+                end,
+            },
+            {
+                name = "WordGroupHeal",
+                type = "Spell",
+                cond = function(self, spell)
+                    return Casting.SpellReady(spell)
                 end,
             },
             {
@@ -1165,15 +1125,6 @@ local _ClassConfig = {
                 end,
             },
             {
-                name = "NaturesWrathDot",
-                type = "Spell",
-                cond = function(self, spell)
-                    return Core.IsModeActive("Mana")
-                        and Casting.DotSpellCheck(spell) and
-                        Config:GetSetting('DoDot')
-                end,
-            },
-            {
                 name = "ShroomPet",
                 type = "Spell",
                 cond = function(self, spell)
@@ -1389,6 +1340,13 @@ local _ClassConfig = {
         },
         ['GroupBuff'] = {
             {
+                name = "HealingAura",
+                type = "Spell",
+                cond = function(self, spell, target)
+                    return Casting.GroupBuffCheck(spell, target)
+                end,
+            },
+            {
                 name = "Swarm of Fireflies",
                 type = "AA",
                 cond = function(self, aaName, target)
@@ -1481,12 +1439,6 @@ local _ClassConfig = {
                 type = "Spell",
                 active_cond = function(self, spell) return Casting.AuraActiveByName(spell.BaseName()) end,
                 cond = function(self, spell) return (spell and spell() and not Casting.AuraActiveByName(spell.BaseName())) end,
-            },
-            {
-                name = "ManaBear",
-                type = "Spell",
-                active_cond = function(self, spell) return Casting.BuffActiveByID(spell.ID()) end,
-                cond = function(self, spell) return (spell and spell() and spell.MyCastTime() or 999999) < 30000 end,
             },
             {
                 name = "Group Spirit of the Great Wolf",
@@ -1594,6 +1546,7 @@ local _ClassConfig = {
                 { name = "WinterFireDD",   cond = function(self) return Core.IsModeActive("Mana") end, },
                 -- [ HEAL MODE ] --
                 { name = "QuickGroupHeal", cond = function(self) return mq.TLO.Me.Level() >= 90 end, },
+                { name = "WordGroupHeal",  cond = function(self) return true end, },
                 { name = "CharmSpell",     cond = function(self) return Config:GetSetting('CharmOn') end, },
                 { name = "QuickRoarDD",    cond = function(self) return true end, },
                 -- [ Fall Back ]--
@@ -1748,7 +1701,6 @@ local _ClassConfig = {
             gem = 13,
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
-                { name = "Alliance", cond = function(self) return Config:GetSetting("DoAlliance") end, },
             },
         },
     },
