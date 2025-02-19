@@ -7,7 +7,7 @@ local Comms        = require("utils.comms")
 local Logger       = require("utils.logger")
 
 local _ClassConfig = {
-    _version              = "1.2 - Live",
+    _version              = "2.1 - Live",
     _author               = "Algar, Derple",
     ['ModeChecks']        = {
         IsHealing = function() return true end,
@@ -675,6 +675,9 @@ local _ClassConfig = {
             "Regrowth",
             "Chloroplast",
             "Regeneration", -- Level 22
+        },
+        ["ShrinkSpell"] = {
+            "Shrink",
         },
     },
     ['HelperFunctions']   = {
@@ -1435,7 +1438,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if target.ID() ~= Core.GetMainAssistId() then return false end
-                    return Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.AltAbility(aaName).Spell, target)
+                    return Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
                 end,
             },
             {
@@ -1445,12 +1448,6 @@ local _ClassConfig = {
                     if not Config:GetSetting('DoTempHP') then return false end
                     return Targeting.TargetClassIs("WAR", target) and Casting.CastReady(spell.RankName) and Casting.GroupBuffCheck(spell, target)
                 end,
-            },
-            {
-                name = "Group Shrink",
-                type = "AA",
-                active_cond = function(self) return mq.TLO.Me.Height() < 2 end,
-                cond = function(self) return Config:GetSetting('DoGroupShrink') and mq.TLO.Me.Height() > 2.2 end,
             },
             {
                 name = "SlowProcBuff",
@@ -1487,7 +1484,7 @@ local _ClassConfig = {
                 active_cond = function(self, aaName) return mq.TLO.Me.Haste() end,
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoHaste') then return false end
-                    return mq.TLO.Me.Level() < 111 and Casting.GroupBuffCheck(mq.TLO.AltAbility(aaName).Spell, target)
+                    return mq.TLO.Me.Level() < 111 and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
                 end,
             },
             {
@@ -1538,6 +1535,33 @@ local _ClassConfig = {
                 cond = function(self, spell, target) --We get Tala'tak at 74, but don't get the AA version until 90
                     if not Config:GetSetting('DoRunSpeed') or (mq.TLO.Me.AltAbility("Lupine Spirit").Rank() or -1) > 3 then return false end
                     return Casting.GroupBuffCheck(spell, target)
+                end,
+            },
+            {
+                name = "Group Shrink",
+                type = "AA",
+                active_cond = function(self) return mq.TLO.Me.Height() < 2 end,
+                cond = function(self, aaName, target)
+                    if not Config:GetSetting('DoGroupShrink') then return false end
+                    return target.Height() > 2.2 and Casting.TargetedAAReady(aaName, target.ID())
+                end,
+            },
+            {
+                name = "Shrink",
+                type = "AA",
+                active_cond = function(self) return mq.TLO.Me.Height() < 2 end,
+                cond = function(self, aaName, target)
+                    if not Config:GetSetting('DoGroupShrink') or Casting.CanUseAA("Group Shrink") then return false end
+                    return target.Height() > 2.2 and Casting.TargetedAAReady(aaName, target.ID())
+                end,
+            },
+            {
+                name = "ShrinkSpell",
+                type = "Spell",
+                active_cond = function(self) return mq.TLO.Me.Height() < 2 end,
+                cond = function(self, spell, target)
+                    if not Config:GetSetting('DoGroupShrink') or Casting.CanUseAA("Group Shrink") or Casting.CanUseAA("Shrink") then return false end
+                    return target.Height() > 2.2 and Casting.TargetedSpellReady(spell, target.ID())
                 end,
             },
             {

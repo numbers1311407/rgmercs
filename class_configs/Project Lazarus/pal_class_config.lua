@@ -1051,7 +1051,8 @@ return {
                 name = "Bash",
                 type = "Ability",
                 cond = function(self, abilityName, target)
-                    return mq.TLO.Me.AbilityReady(abilityName)() and Casting.AbilityRangeCheck(target)
+                    return mq.TLO.Me.AbilityReady(abilityName)() and Casting.AbilityRangeCheck(target) and
+                        (Core.ShieldEquipped() or Casting.CanUseAA("2 Hand Bash"))
                 end,
             },
             {
@@ -1384,7 +1385,7 @@ return {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if not Config:GetSetting('DoSalvation') then return false end
-                    return Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.AltAbility(aaName).Spell, target)
+                    return Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
                 end,
             },
         },

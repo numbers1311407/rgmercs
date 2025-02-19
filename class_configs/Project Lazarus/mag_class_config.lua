@@ -22,6 +22,7 @@ _ClassConfig      = {
         if mode == "PetTank" then
             Core.DoCmd("/pet taunt on")
             Core.DoCmd("/pet resume on")
+            Config:GetSettings().DoPetCommands        = true
             Config:GetSettings().AutoAssistAt         = 100
             Config:GetSettings().StayOnTarget         = false
             Config:GetSettings().DoAutoEngage         = true
@@ -1750,7 +1751,7 @@ _ClassConfig      = {
                 end,
                 post_activate = function(self, spell, success)
                     if success then
-                        Core.SafeCallFunc("Autoinventory", self.ClassConfig.HelperFunctions.HandleItemSummon, self, spell, "personal")
+                        Core.SafeCallFunc("Autoinventory", self.ClassConfig.HelperFunctions.HandleItemSummon, self, spell, "group")
                     end
                 end,
             },

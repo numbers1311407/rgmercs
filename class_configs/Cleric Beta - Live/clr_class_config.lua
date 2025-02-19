@@ -654,6 +654,21 @@ local _ClassConfig = {
             "Divine Writ",
             "Decree",
         },
+        ['HammerPet'] = {
+            "Unswerving Hammer of Faith",
+            "Unswerving Hammer of Retribution",
+            "Unflinching Hammer of Zeal",
+            "Indomitable Hammer of Zeal",
+            "Unwavering Hammer of Zeal",
+            "Devout Hammer of Zeal",
+            "Infallible Hammer of Zeal",
+            "Infallible Hammer of Reverence",
+            "Ardent Hammer of Zeal",
+            "Unyielding Hammer of Zeal",
+            "Unyielding Hammer of Obliteration",
+            "Incorruptible Hammer of Obliteration",
+            "Unrelenting Hammer of Zeal",
+        },
     }, -- end AbilitySets
     ['HelperFunctions']   = {
         DoRez = function(self, corpseId)
@@ -1410,7 +1425,7 @@ local _ClassConfig = {
                 type = "AA",
                 cond = function(self, aaName, target)
                     if target.ID() ~= Core.GetMainAssistId() then return false end
-                    return Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.AltAbility(aaName).Spell, target)
+                    return Casting.AAReady(aaName) and Casting.GroupBuffCheck(mq.TLO.Me.AltAbility(aaName).Spell, target)
                 end,
             },
             {
