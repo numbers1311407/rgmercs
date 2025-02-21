@@ -1662,7 +1662,7 @@ local _ClassConfig = {
             cond = function(self, gem) return mq.TLO.Me.NumGems() >= gem end,
             spells = {
                 -- [ MANA MODE ] --
-                { name = "NaturesWrathDot", cond = function(self) return Core.IsModeActive("Mana") end, },
+                --{ name = "NaturesWrathDot", cond = function(self) return Core.IsModeActive("Mana") end, },
                 -- [ HEAL MODE ] --
                 { name = "TempHPBuff",      cond = function(self) return true end, },
             },
