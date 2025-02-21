@@ -973,6 +973,13 @@ local _ClassConfig = {
             end,
         },
         {
+            name = 'BattleBuff',
+            targetId = function(self) return { mq.TLO.Me.ID(), } end,
+            cond = function(self, combat_state)
+                return combat_state == "Combat" and not Casting.IAmFeigning()
+            end,
+        },
+        {
             name = 'Debuff',
             state = 1,
             steps = 1,
@@ -1023,6 +1030,15 @@ local _ClassConfig = {
         },
     },
     ['Rotations']         = {
+        ['BattleBuff'] = {
+            {
+                name = "Spirit of the White Wolf",
+                type = "AA",
+                cond = function(self, aaName)
+                    return true
+                end,
+            },  
+        },
         ['DPS'] = {
             {
                 name = "SunrayDot",
