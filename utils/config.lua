@@ -48,7 +48,7 @@ Config.Constants.RGHybrid            = Set.new({ "SHD", "PAL", "RNG", "BST", "BR
 Config.Constants.RGTank              = Set.new({ "WAR", "PAL", "SHD", })
 Config.Constants.RGPetClass          = Set.new({ "BST", "NEC", "MAG", "SHM", "ENC", "SHD", })
 Config.Constants.RGMezAnims          = Set.new({ 1, 5, 6, 27, 43, 44, 45, 80, 82, 112, 134, 135, })
-Config.Constants.ModRods             = { "Modulation Shard", "Transvergence", "Modulation", "Modulating", }
+Config.Constants.ModRods             = { "Modulation Shard", "Transvergence", "Modulation", "Modulating", "Azure Mind Crystal", }
 Config.Constants.SpellBookSlots      = 1120
 Config.Constants.CastCompleted       = Set.new({ "CAST_SUCCESS", "CAST_IMMUNE", "CAST_TAKEHOLD", "CAST_RESISTED", "CAST_RECOVER", })
 
@@ -759,7 +759,7 @@ Config.DefaultConfig = {
         Index = 14,
         Tooltip = "Which version of class configs to Load",
         Type = "Custom",
-        Default = "Live",
+        Default = mq.TLO.EverQuest.Server() == "Project Lazarus" and "Project Lazarus" or "Live",
         ConfigType = "Advanced",
         FAQ = "How do I load configuration file for different servers types?",
         Answer = "You can change the config type by selecting a different Server Type from the main panel.",
