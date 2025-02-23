@@ -5,7 +5,7 @@ local Targeting    = require("utils.targeting")
 local Casting      = require("utils.casting")
 
 local _ClassConfig = {
-    _version              = "(EXPERIMENTAL) 1.2 - Live HealMode only, Heal/DPS Improvements",
+    _version              = "Alpha 1.2 - Live (Heal Mode Only)",
     _author               = "Algar (based on default by Derple)",
     ['ModeChecks']        = {
         IsHealing = function() return true end,
@@ -1213,7 +1213,7 @@ local _ClassConfig = {
                 type = "Spell",
                 cond = function(self, spell, target)
                     if not Config:GetSetting('DoTempHP') then return false end
-                    return Targeting.TargetClassIs("WAR", target) and Casting.CastReady(spell.RankName) and Casting.GroupBuffCheck(spell, target)
+                    return Targeting.TargetClassIs("WAR", target) and Casting.GemReady(spell) and Casting.GroupBuffCheck(spell, target)
                 end,
             },
             {
